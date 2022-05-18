@@ -1,0 +1,16 @@
+{
+  "name": "kriss/webman-eloquent-ide-helper",
+  "type": "library",
+  "license": "MIT",
+  "description": "Webman plugin kriss/webman-eloquent-ide-helper",
+  "require": {
+    "barryvdh/laravel-ide-helper": "^2.12",
+    "illuminate/config": ">=5",
+    "illuminate/container": ">=5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kriss\\WebmanEloquentIdeHelper\\": "src"
+    }
+  }
+}
