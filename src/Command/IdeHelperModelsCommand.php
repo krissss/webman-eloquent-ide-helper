@@ -11,7 +11,6 @@ use Illuminate\Filesystem\Filesystem;
 function base_path($path = '')
 {
     $basePath = dirname(__DIR__, 5);
-    echo $basePath;exit;
     return $basePath . ($path ? DIRECTORY_SEPARATOR . $path : $path);
 }
 
