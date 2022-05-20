@@ -1,5 +1,7 @@
 <?php
 
+use Kriss\WebmanEloquentIdeHelper\Command\IdeHelperModelsCommand;
+
 return [
-    'Kriss\WebmanEloquentIdeHelper\Command\IdeHelperModelsCommand',
+    IdeHelperModelsCommand::class,
 ];
