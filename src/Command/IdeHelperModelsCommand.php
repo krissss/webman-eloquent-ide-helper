@@ -2,8 +2,8 @@
 
 namespace Kriss\WebmanEloquentIdeHelper\Command;
 
-use Barryvdh\LaravelIdeHelper\ClassMapGenerator;
 use Barryvdh\LaravelIdeHelper\Console\ModelsCommand;
+use Composer\ClassMapGenerator\ClassMapGenerator;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Filesystem\Filesystem;
