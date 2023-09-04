@@ -4,9 +4,11 @@ namespace Kriss\WebmanEloquentIdeHelper\Command;
 
 use Barryvdh\LaravelIdeHelper\Console\ModelsCommand;
 use Composer\ClassMapGenerator\ClassMapGenerator;
+use Illuminate\Console\Concerns\ConfiguresPrompts;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Filesystem\Filesystem;
+use Kriss\WebmanEloquentIdeHelper\Wrapper\LaravelContainerWrapper;
 
 function base_path($path = '')
 {
@@ -23,9 +25,14 @@ class IdeHelperModelsCommand extends ModelsCommand
     {
         parent::__construct(new Filesystem());
 
-        $container = new Container();
-        $container->instance('config', $this->loadConfig());
-        $this->setLaravel($container);
+        $laravel = new Container();
+        if (trait_exists(ConfiguresPrompts::class)) {
+            // 为了解决 ConfiguresPrompts 中通过 $this->laravel->runningUnitTests() 的问题
+            // https://github.com/krissss/webman-eloquent-ide-helper/issues/2
+            $laravel = new LaravelContainerWrapper($laravel);
+        }
+        $laravel->instance('config', $this->loadConfig());
+        $this->setLaravel($laravel);
     }
 
     private function loadConfig()
