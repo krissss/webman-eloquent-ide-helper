@@ -5,7 +5,7 @@ namespace Kriss\WebmanEloquentIdeHelper\Wrapper;
 use Closure;
 use Illuminate\Container\Container;
 
-final class LaravelContainerWrapper implements \Illuminate\Contracts\Container\Container
+final class LaravelContainerWrapper extends Container
 {
     private Container $container;
 
@@ -210,7 +210,7 @@ final class LaravelContainerWrapper implements \Illuminate\Contracts\Container\C
     /**
      * @inheritDoc
      */
-    public function get(string $id)
+    public function get($id)
     {
         return $this->__call(__FUNCTION__, func_get_args());
     }
@@ -218,7 +218,7 @@ final class LaravelContainerWrapper implements \Illuminate\Contracts\Container\C
     /**
      * @inheritDoc
      */
-    public function has(string $id): bool
+    public function has($id): bool
     {
         return $this->__call(__FUNCTION__, func_get_args());
     }
