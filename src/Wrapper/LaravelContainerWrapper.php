@@ -18,6 +18,8 @@ final class LaravelContainerWrapper extends Container
     {
         if ($name === 'runningUnitTests') {
             return false;
+        } elseif ($name === 'version') {
+            return \Composer\InstalledVersions::getVersion('illuminate/container');
         }
 
         return $this->container->{$name}(...$arguments);
