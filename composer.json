@@ -4,7 +4,7 @@
   "license": "MIT",
   "description": "webman-eloquent-ide-helper plugin",
   "require": {
-    "barryvdh/laravel-ide-helper": "^2.13",
+    "barryvdh/laravel-ide-helper": "^2.13||^3.0",
     "illuminate/config": ">=5",
     "illuminate/container": ">=5",
     "illuminate/database": ">=5"
