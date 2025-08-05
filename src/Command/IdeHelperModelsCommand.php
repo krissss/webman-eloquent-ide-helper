@@ -7,8 +7,12 @@ use Composer\ClassMapGenerator\ClassMapGenerator;
 use Illuminate\Console\Concerns\ConfiguresPrompts;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\FileViewFinder;
 use Kriss\WebmanEloquentIdeHelper\Wrapper\LaravelContainerWrapper;
+use Illuminate\View\Factory as ViewFactory;
 
 function base_path($path = '')
 {
@@ -23,16 +27,35 @@ class IdeHelperModelsCommand extends ModelsCommand
 
     public function __construct()
     {
-        parent::__construct(new Filesystem());
+        $filesystem = new Filesystem();
 
-        $laravel = new Container();
+        $config = $this->loadConfig();
+
+        $viewFactory = $this->createViewFactory($filesystem);
+
+        parent::__construct($filesystem, $config, $viewFactory);
+
+        $container = new Container();
+
         if (trait_exists(ConfiguresPrompts::class)) {
-            // 为了解决 ConfiguresPrompts 中通过 $this->laravel->runningUnitTests() 的问题
-            // https://github.com/krissss/webman-eloquent-ide-helper/issues/2
-            $laravel = new LaravelContainerWrapper($laravel);
+            $container = new LaravelContainerWrapper($container);
         }
-        $laravel->instance('config', $this->loadConfig());
-        $this->setLaravel($laravel);
+
+        $container->instance('config', $config);
+
+        $this->setLaravel($container);
+    }
+
+    private function createViewFactory(Filesystem $filesystem): ViewFactory
+    {
+        $resolver = new EngineResolver();
+
+        $finder = new FileViewFinder($filesystem, []);
+
+        // 新增事件调度器
+        $events = new Dispatcher(new Container());
+
+        return new ViewFactory($resolver, $finder, $events);
     }
 
     private function loadConfig()
