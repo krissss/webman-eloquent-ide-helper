@@ -3,77 +3,57 @@
 namespace Kriss\WebmanEloquentIdeHelper\Command;
 
 use Barryvdh\LaravelIdeHelper\Console\ModelsCommand;
-use Composer\ClassMapGenerator\ClassMapGenerator;
-use Illuminate\Console\Concerns\ConfiguresPrompts;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\FileViewFinder;
 use Kriss\WebmanEloquentIdeHelper\Wrapper\LaravelContainerWrapper;
+use Illuminate\View\Factory as ViewFactory;
+use Symfony\Component\Console\Attribute\AsCommand;
 
-function base_path($path = '')
-{
-    $basePath = dirname(__DIR__, 5);
-    return $basePath . ($path ? DIRECTORY_SEPARATOR . $path : $path);
-}
-
+#[AsCommand(name: 'ide-helper:models', description: 'Generate autocompletion for models')]
 class IdeHelperModelsCommand extends ModelsCommand
 {
-    protected static $defaultName = 'ide-helper:models';
-    protected static $defaultDescription = 'ide-helper models';
-
     public function __construct()
     {
-        parent::__construct(new Filesystem());
+        $filesystem = new Filesystem();
 
-        $laravel = new Container();
-        if (trait_exists(ConfiguresPrompts::class)) {
-            // 为了解决 ConfiguresPrompts 中通过 $this->laravel->runningUnitTests() 的问题
-            // https://github.com/krissss/webman-eloquent-ide-helper/issues/2
-            $laravel = new LaravelContainerWrapper($laravel);
-        }
-        $laravel->instance('config', $this->loadConfig());
-        $this->setLaravel($laravel);
+        $config = $this->loadConfig();
+
+        $viewFactory = $this->createViewFactory($filesystem);
+
+        parent::__construct($filesystem, $config, $viewFactory);
+
+        $container = new Container();
+
+        $container = new LaravelContainerWrapper($container);
+
+        $container->instance('config', $config);
+
+        $this->setLaravel($container);
     }
 
-    private function loadConfig()
+    private function loadConfig(): Repository
     {
-        $items = config('plugin.kriss.webman-eloquent-ide-helper.ide-helper');
         return new Repository([
-            'ide-helper' => $items,
+            'ide-helper' => array_merge(
+                require base_path('vendor/barryvdh/laravel-ide-helper/config/ide-helper.php'),
+                config('plugin.kriss.webman-eloquent-ide-helper.ide-helper', []),
+            ),
         ]);
     }
 
-    /**
-     * 代码同父方法，重写是为了覆盖 base_path 函数
-     * @inheritDoc
-     */
-    protected function loadModels()
+    private function createViewFactory(Filesystem $filesystem): ViewFactory
     {
-        $models = [];
-        foreach ($this->dirs as $dir) {
-            if (is_dir(base_path($dir))) {
-                $dir = base_path($dir);
-            }
+        $resolver = new EngineResolver();
 
-            $dirs = glob($dir, GLOB_ONLYDIR);
-            foreach ($dirs as $dir) {
-                if (!is_dir($dir)) {
-                    $this->error("Cannot locate directory '{$dir}'");
-                    continue;
-                }
+        $finder = new FileViewFinder($filesystem, []);
 
-                if (file_exists($dir)) {
-                    $classMap = ClassMapGenerator::createMap($dir);
+        // 新增事件调度器
+        $events = new Dispatcher(new Container());
 
-                    // Sort list so it's stable across different environments
-                    ksort($classMap);
-
-                    foreach ($classMap as $model => $path) {
-                        $models[] = $model;
-                    }
-                }
-            }
-        }
-        return $models;
+        return new ViewFactory($resolver, $finder, $events);
     }
 }
